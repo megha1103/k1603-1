@@ -3,16 +3,15 @@
 #include<pthread.h>
 #include"helper.h"
 #include"banker.h"
-
 int Banker_init(struct BankerData *data, int availableResourcesCount,int processCount, 
         int* maxResourcesArray, int** resourcesDemandMatrix, int** resourcesAllocatedMatrix)
-   // Takes  Banker Data structure and corresponding data to initialize it.
+   //   Banker Data structure is taken and the corresponding data is initialised.
 {
     if(availableResourcesCount<1)return -1;
     
-    // Initialise the concurrencyLock of our Banker Data structure.
+    // concurrencyLock of our Banker Data structure is initialized.
     pthread_mutex_init(&(data->concurrencyLock), NULL);
-    // Store the data in our Banker Data structure.
+    //  data in stored Banker Data structure.
     data->processCount = processCount;
     data->availableResourcesCount = availableResourcesCount;
     data->maxResourcesArray = maxResourcesArray;
@@ -29,7 +28,7 @@ int Banker_init(struct BankerData *data, int availableResourcesCount,int process
     }
     data->resourcesDemandMatrix = resourcesDemandMatrix;
     data->resourcesAllocatedMatrix = resourcesAllocatedMatrix;
-    // Compute resourcesRequiredMatrix
+    //  resourcesRequiredMatrix is computed....
     data->resourcesRequiredMatrix = (int**)malloc(processCount * sizeof(int));
     for(p=0;p<processCount;++p)
     {
@@ -65,12 +64,12 @@ int Banker_freeResource(struct BankerData *banker,int processIndex, int resource
     if(resourceCount > banker->resourcesAllocatedMatrix[processIndex][resourceIndex])
         resourceCount = banker->resourcesAllocatedMatrix[processIndex][resourceIndex];
 
-    // Free the resource and return it to the banker.
+    //  resource is freed  and returned to the banker.
     banker->resourcesAllocatedMatrix[processIndex][resourceIndex] -= resourceCount;
     banker->availableResourcesArray[resourceIndex] += resourceCount;
     banker->resourcesRequiredMatrix[processIndex][resourceIndex] += resourceCount;
 
-    // Unlock the mutex lock to allow other threads to access the banker's data.
+    //  mutex lock is unlocked to allow other threads to access the banker's data.
     pthread_mutex_unlock(&(banker->concurrencyLock));
     return 1;
 }
@@ -92,12 +91,9 @@ int Banker_freeAllResources(struct BankerData *banker,int processIndex)
     return 1;
 }
 
-/*
-    Gives resource to the caller if it is available and does not lead to an unsafe state.
-    This is a thread safe function. It uses mutex locks to acomplish thread safety.
-    Parameters: banker,         the BankerData structure storing the current state of the banker.
-                resourceIndex,  the index number of the resource to allocate to the caller.
-                resourceCount,  the number of resource instances to allocate to the caller.
+/*This Function  uses mutex locks to acomplish thread safety so it is a thread safe function..
+     Resources are given  to the caller if it is available and does not lead to an unsafe state.
+     
     Return:  1 on successfull resource allocation.
             -1 if the resourceIndex is invalid.
             -2 if processIndex is invalid.
@@ -107,7 +103,7 @@ int Banker_freeAllResources(struct BankerData *banker,int processIndex)
 */
 int Banker_requestResource(struct BankerData *banker,int processIndex, int resourceIndex, int resourceCount)
 {
-    // Check for validity of passed parameters.
+    //  validity of passed parameters is checked.
     if(processIndex<0 || processIndex>(banker->processCount)-1)return -2;
     // This will be returned the the function.
     int returnCode = 1;
@@ -144,7 +140,7 @@ int Banker_requestResource(struct BankerData *banker,int processIndex, int resou
     }
     else
     {
-        // Free the safeSequence array after use.
+        //  safeSequence arrayis freed after use.
         free(safeSequence);
     }
 
@@ -196,7 +192,7 @@ int* Banker_getSafeSequence(struct BankerData *banker)
                 {
                     if(banker->resourcesRequiredMatrix[p][r]>availableResourcesArray[r])
                     {
-                        // This process cannot allocate all resources.
+                        //  All resources are not allocated by this process.
                         break;
                     }
                 }
