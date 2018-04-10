@@ -1,31 +1,21 @@
-/*
- * This is the banker.
-*/
-// Include Files.
 #include<stdio.h>
 #include<stdlib.h>
 #include<pthread.h>
 #include"helper.h"
 #include"banker.h"
 
-/*
-    Takes  BankerData structure and corresponding data to initialize it..
-    Return  1 on succesfull initialisation.
-            -1 if availableResourcesCount is less than 1.
-    TODO: Check if given values are correct.
-*/
 int Banker_init(struct BankerData *data, int availableResourcesCount,int processCount, 
         int* maxResourcesArray, int** resourcesDemandMatrix, int** resourcesAllocatedMatrix)
+   // Takes  Banker Data structure and corresponding data to initialize it.
 {
     if(availableResourcesCount<1)return -1;
-    // All is good.
-    // Initialise the concurrencyLock of our BankerData structure.
+    
+    // Initialise the concurrencyLock of our Banker Data structure.
     pthread_mutex_init(&(data->concurrencyLock), NULL);
-    // Store the data in our BankerData structure.
+    // Store the data in our Banker Data structure.
     data->processCount = processCount;
     data->availableResourcesCount = availableResourcesCount;
     data->maxResourcesArray = maxResourcesArray;
-    // Compute the available resources array.
     data->availableResourcesArray = (int*)malloc((availableResourcesCount)*sizeof(int));
     int r,sum,p;
     for(r=0;r<availableResourcesCount;++r)
@@ -54,32 +44,17 @@ int Banker_init(struct BankerData *data, int availableResourcesCount,int process
     }
     return 1;
 }
-
-/*
-    frees the dynamically allocated members of a BankerData structure.
-    the passed BankerData must not be used after it is destroyed.
-*/
 void Banker_destroy(struct BankerData* banker)
 {
     free(banker->availableResourcesArray);
     free(banker->resourcesRequiredMatrix);
 }
 
-/*
-    Frees the resource from the caller and returns it to the banker.
-    This is a thread safe function. It uses mutex locks to acomplish thread safety.
-    Parameters: banker,         the BankerData structure storing the current state of the banker.
-                resourceIndex,  the index number of the resource to free.
-                resourceCount,  the number of resource instances return to the banker.
-    Return:  1, on successfull freeing of the resource.
-            -1, if the passed processIndex or resourceIndex is invalid.
-*/
+
 int Banker_freeResource(struct BankerData *banker,int processIndex, int resourceIndex, int resourceCount)
 {
-    // Use  mutex. lock to prevent concurrent access to the banker's data.
+   
     pthread_mutex_lock(&(banker->concurrencyLock));
-
-    // Check. for the validity of the resourceIndex and the processIndex. Return if any of them is invalid.
     if(resourceIndex<0 || resourceIndex>(banker->availableResourcesCount)-1
         || processIndex<0 || processIndex>(banker->processCount)-1) 
         {
@@ -99,14 +74,7 @@ int Banker_freeResource(struct BankerData *banker,int processIndex, int resource
     pthread_mutex_unlock(&(banker->concurrencyLock));
     return 1;
 }
-/*
-    Frees all the resources from the caller and returns them to the banker.
-    This is a thread safe function. It uses mutex locks to acomplish thread safety.
-    Parameters: banker,         the BankerData structure storing the current state of the banker.
-                processIndex,   the process to free resources from.
-    Return:  1, on successfull freeing of the resource.
-            -1, if the passed processIndex is invalid.
-*/
+
 int Banker_freeAllResources(struct BankerData *banker,int processIndex)
 {
     if(processIndex<0 || processIndex>(banker->processCount)-1) return -1;
@@ -189,7 +157,7 @@ int Banker_requestResource(struct BankerData *banker,int processIndex, int resou
 /*
     Checks if the passed BankerData is in a safe state and returns the safe sequence.
     Return:  NULL, if the BankerData is not in a safe state i.e. there is no safe sequence.
-             int*, array of size processCount(of the BankerData passed) which stores the index of processes, in the safe sequence.
+    int*, array of size processCount(of the BankerData passed) which stores the index of processes, in the safe sequence.
 */
 int* Banker_getSafeSequence(struct BankerData *banker)
 {
@@ -235,9 +203,7 @@ int* Banker_getSafeSequence(struct BankerData *banker)
                 if(r==banker->availableResourcesCount)
                 {
                     // This process can allocate all resources.
-                    // Simulate...
-                    // After process finishes, it 
-                    // Returns its resources to the banker
+                    // After process finishes, it returns its resources to the banker
                     for(r=0;r<banker->availableResourcesCount;++r)
                     {
                         availableResourcesArray[r] += banker->resourcesAllocatedMatrix[p][r];
@@ -260,18 +226,15 @@ int* Banker_getSafeSequence(struct BankerData *banker)
         if(isStatePseudoSafe != 1)break;
     }
 
-    // Free data structures.
+    
     free(hasFinished);
     free(availableResourcesArray);
-
-    // Check if some processes caused a deadlock.
     if(remainingProcesses>0)
     {
-        // No safe sequence found.
+        
         free(safeSequence);
         return NULL;
     }
-    // Else return the safe sequence.
     return safeSequence;
 }
 
@@ -284,14 +247,14 @@ void Banker_displayBanker(struct BankerData *data)
     int m,j,k;
     printf("\tBanker Data\n");
     int** matrices[] = {data->resourcesDemandMatrix,data->resourcesAllocatedMatrix,data->resourcesRequiredMatrix};
-    printf("\tAvailable Resources { ");
+    printf("\t Available Resources { ");
     for(k=0;k<data->availableResourcesCount;++k)
         printf("%d ",data->availableResourcesArray[k]);
     printf("}\n");
     for(k=0;k<arraylength(matrices);++k)
     {
-        printf("\t  %s Matrix:-\n",
-        (k==0)?"Recources Demand":(k==1)?"Resources Allocated":"Resources Required");
+        printf("\t  %s Matrix  :-\n",
+        (k==0)?"Recource demand":(k==1)?" Allocated":" Required");
         for(m=0;m<data->processCount;++m)
         {
             printf("\t\t");
